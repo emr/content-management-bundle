@@ -1,0 +1,8 @@
+doctrine:
+    orm:
+        mappings:
+            EmrCMBundle:
+                mapping:   true
+                type:      staticphp
+                dir:       'Entity'
+                is_bundle: true

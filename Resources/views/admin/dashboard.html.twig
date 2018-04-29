@@ -1,0 +1,98 @@
+{% extends '@EasyAdmin/default/layout.html.twig' %}
+
+{% set _content_title = 'Dashboard'|trans %}
+
+{% block page_title -%}
+    {{ _content_title }}
+{%- endblock %}
+
+{% block content_header %}
+    <h1 class="title">{{ _content_title }}</h1>
+{% endblock %}
+
+{% block main %}
+    <div class="section">
+        <h3 class="section-title">Hızlı işlemler</h3>
+        <div class="section-body">
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="box box-primary">
+                        <strong class="box-header with-border">Sayfaları düzenle</strong>
+                        {% for item in edit_pages %}
+                            <a href="{{ path('easyadmin', { entity: 'PageLayout', action: 'section', _page: item.page }) }}" class="box-body">
+                                <i class="fa fa-file-text fa-fw"></i>
+                                &nbsp;{{ item.name }}
+                            </a>
+                        {% else %}
+                            <div class="box-body">Henüz sayfalarınız oluşturulmamış. Lütfen yöneticinize başvurun.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% for entity in edit_entities %}
+                    <div class="col-sm-4">
+                        <div class="box box-primary">
+                            <strong class="box-header with-border">{{ entity.title|default(entity.name)|trans }}</strong>
+                            <a href="{{ path('easyadmin', { entity: entity.name, action: 'new' }) }}" class="box-body body-header" style="">
+                                <strong><i class="fa fa-plus-circle fa-fw"></i> Yeni ekle</strong>
+                            </a>
+                            {% if entity.rows|length > 0 %}
+                                {% for row in entity.rows %}
+                                    <a href="{{ path('easyadmin', { entity: entity.name, action: 'edit', id: row.id }) }}" class="box-body body-row">
+                                        <i class="fa fa-file-o fa-fw" style="transform: scale(.8);"></i>
+                                        {% set label = attribute(row, entity.identifier) %}
+                                        &nbsp;{{ label[:35] ~ (label|length > 35 ? '...') }}
+                                    </a>
+                                {% endfor %}
+                                <a href="{{ path('easyadmin', { entity: entity.name, action: 'list' }) }}" class="box-body body-footer" style="border-top: 1px solid #f4f4f4;">
+                                    <strong><i class="fa fa-list-ul fa-fw"></i> Tümünü listele</strong>
+                                </a>
+                            {% else %}
+                                <div class="box-body">Henüz kayıt yok.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block head_stylesheets %}
+    {{ parent() }}
+    <style>
+        .box > .box-body {
+            display: block;
+        }
+        .box-body.body-header {
+            border-bottom: 1px solid #f4f4f4;
+        }
+        .box-body.body-footer {
+            border-top: 1px solid #f4f4f4;
+        }
+        .box-body.body-row {
+            padding: 5px 10px;
+        }
+
+        .section {
+            margin: 0 -15px;
+            border-top: 5px solid rgba(0, 0, 0, .04);
+            background: rgba(0, 0, 0, .02);
+        }
+        .section:nth-child(even) {
+            background: #fff;
+        }
+        .section-title {
+            margin: 0;
+            padding: 15px;
+        }
+        .section-body {
+            padding: 5px 15px 20px;
+        }
+        .section-body .box {
+            margin: 0;
+        }
+        .section:nth-child(even) .box {
+            background: rgba(0, 0, 0, .01);
+        }
+    </style>
+{% endblock %}

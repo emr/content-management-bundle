@@ -1,0 +1,19 @@
+{
+    "name": "emr/content-management-bundle",
+    "description": "Content Management Bundle for Symfony",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Emre",
+            "email": "iletisim@emreakinci.me"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Emr\\CMBundle\\": ""
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7"
+    }
+}

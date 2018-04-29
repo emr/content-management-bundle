@@ -1,0 +1,57 @@
+{% extends '@EasyAdmin/default/list.html.twig' %}
+
+{% block main %}
+    {% set column = pages|length > 0 and pages|length < 4 ? pages|length : 2 %}
+    <div class="row">
+        {% for page in pages %}
+            <div class="col-md-{{ 12/column }}">
+                <h3><strong>{{ intl_language(page.constant.locale, app.request.locale) }}</strong></h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th><span>{{ 'Section'|trans }}</span></th>
+                            <th><span>{{ 'Edit'|trans }}</span></th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        {% for title, section in page.sections %}
+                            {% set _request_parameters = {
+                            menuIndex: app.request.get('menuIndex'),
+                            submenuIndex: app.request.get('submenuIndex'),
+                            page: app.request.get('page', 1),
+                            } %}
+                            {% set _referer = _request_parameters|merge({
+                            entity: app.request.get('entity'),
+                            action: 'section',
+                            _page: app.request.get('_page'),
+                            }) %}
+                            {% set entityName = title|humanize|title|split(' ')|join ~ 'Section' %}
+                            {% set entityConfig = easyadmin_entity(entityName) %}
+                            {% if entityConfig.redirect is defined and entityConfig.redirect is not empty %}
+                                {% set _request_parameters = _request_parameters|merge(entityConfig.redirect) %}
+                            {% else %}
+                                {% set _request_parameters = _request_parameters|merge({ entity: entityName, action: 'edit', id: section.id }) %}
+                            {% endif %}
+                            <tr>
+                                <td>
+                                    {{ title|humanize|trans }}
+                                </td>
+                                <td class="actions">
+                                    <a class="text-primary action-edit" href="{{ path('easyadmin', _request_parameters|merge({referer: path('easyadmin', _referer)|url_encode})) }}">{{ 'Edit'|trans }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock main %}
+
+{% block head_stylesheets %}
+    {{ parent() }}
+    <style> h3 { margin-top: 0; } </style>
+{% endblock head_stylesheets %}

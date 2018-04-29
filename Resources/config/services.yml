@@ -1,0 +1,28 @@
+services:
+    emr_cm.entity_config.annotation:
+        public: false
+        class: Emr\CMBundle\Configuration\AnnotationEntityConfig
+        arguments:
+#            - '@annotation_reader'
+            - '%kernel.root_dir%/../src/%emr_cm.entity_path%'
+            - '%emr_cm.entity_namespace%'
+            - '%emr_cm.annotation_classes%'
+
+    emr_cm.entity_config: "@emr_cm.entity_config.annotation"
+
+    Emr\CMBundle\EventListener\DoctrineSubscriber:
+        public: false
+        arguments: ["@emr_cm.entity_config"]
+        tags:
+            - { name: doctrine.event_subscriber }
+
+    Emr\CMBundle\EventListener\EasyAdminSubscriber:
+        public: false
+        tags:
+            - { name: kernel.event_subscriber }
+
+    Emr\CMBundle\Form\Admin\SectionType:
+        public: false
+        arguments: ["@emr_cm.entity_config"]
+        tags:
+            - { name: form.type }
