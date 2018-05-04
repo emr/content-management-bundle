@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\MappedSuperclass()
  */
-abstract class GeneralConstant
+abstract class Constant
 {
     /**
      * @var integer
@@ -20,6 +20,16 @@ abstract class GeneralConstant
     public function getId()
     {
         return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    public function __toString()
+    {
+        return 'Constant';
     }
 
 //    public function loadMetadata(ORM\ClassMetadata $metadata)

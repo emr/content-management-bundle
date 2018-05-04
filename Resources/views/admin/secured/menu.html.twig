@@ -1,7 +1,0 @@
-{% extends '@EasyAdmin/default/menu.html.twig' %}
-
-{% block menu_item %}
-    {% if item.role_require is not defined or (item.role_require and is_granted(item.role_require)) %}
-        {{ parent() }}
-    {% endif %}
-{% endblock menu_item %}

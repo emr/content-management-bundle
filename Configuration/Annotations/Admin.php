@@ -8,6 +8,7 @@ use Doctrine\Common\Annotations\Annotation;
  * @Annotation
  * @Target("CLASS")
  */
-class PageClass
+class Admin
 {
+    public $label;
 }

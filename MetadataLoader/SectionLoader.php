@@ -4,6 +4,7 @@ namespace Emr\CMBundle\MetadataLoader;
 
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Emr\CMBundle\Configuration\EntityConfig;
 
 class SectionLoader extends AbstractLoader
 {
@@ -11,6 +12,8 @@ class SectionLoader extends AbstractLoader
     {
         $builder = new ClassMetadataBuilder($metadata);
 
-//        $builder->createOneToMany($this->config->getPageClass());
+        $builder->createOneToMany('page', $this->config->getClass(EntityConfig::PAGE))
+            ->mappedBy($this->config->getSection($metadata->getName())['property'])
+        ->build();
     }
 }

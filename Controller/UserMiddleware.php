@@ -31,7 +31,7 @@ trait UserMiddleware
         $granted = !array_diff($user->getRoles(), $logged->getRoles());
 
         if (!$granted)
-            throw $this->createAccessDeniedException("#21 Access denied. (Erişim engellendi.)");
+            throw $this->createAccessDeniedException("[21] Access denied.");
 
         return parent::editAction();
     }
@@ -44,7 +44,7 @@ trait UserMiddleware
         $granted = !array_diff($user->getRoles(), $logged->getRoles());
 
         if (!$granted)
-            throw $this->createAccessDeniedException("#22 Access denied. (Erişim engellendi.)");
+            throw $this->createAccessDeniedException("[22] Access denied.");
 
         return parent::deleteAction();
     }

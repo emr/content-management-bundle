@@ -2,6 +2,7 @@
 
 namespace Emr\CMBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -17,7 +18,7 @@ abstract class Section
     protected $id;
 
     /**
-     * @ORM\OneToMany(targetEntity="AppBundle\Entity\CMS\Page", mappedBy="example")
+     * @var Page[]
      */
     protected $page;
 
@@ -27,18 +28,30 @@ abstract class Section
      */
     public $identifier;
 
-    public function getId(): integer
+    public function __construct()
+    {
+        $this->page = new ArrayCollection();
+    }
+
+    public function getId()
     {
         return $this->id;
     }
 
-    public function setPage(Page $page)
+    public function addPage(Page $page): self
     {
 //        $page->{EntityConfig::getConfig('section', static::class, 'name')} = $this;
-        $this->page = $page;
+        $this->page->add($page);
+
+        return $this;
     }
 
-    public function getPage(): Page
+    public function removePage(Page $page)
+    {
+        $this->page->removeElement($page);
+    }
+
+    public function getPage()
     {
         return $this->page;
     }
@@ -51,7 +64,8 @@ abstract class Section
             $str .= $this->identifier;
         else
             if ($this->page)
-                $str .= $this->page->page.'/'.$this->page->constant->locale.',';
+                foreach ($this->page as $page)
+                    $str .= $page->getKey().'/'.$page->getConstant()->getLocale().',';
             else
                 $str .= 'orphan';
 

@@ -16,32 +16,36 @@
                         </thead>
 
                         <tbody>
-                        {% for title, section in page.sections %}
+                        {% for section in sections %}
+                        {% set sectionObj = attribute(page, section.property) %}
+                        {% if sectionObj %}
                             {% set _request_parameters = {
-                            menuIndex: app.request.get('menuIndex'),
-                            submenuIndex: app.request.get('submenuIndex'),
-                            page: app.request.get('page', 1),
+                                menuIndex: app.request.get('menuIndex'),
+                                submenuIndex: app.request.get('submenuIndex'),
+                                page: app.request.get('page', 1),
+                                _key: app.request.get('_key'),
                             } %}
                             {% set _referer = _request_parameters|merge({
-                            entity: app.request.get('entity'),
-                            action: 'section',
-                            _page: app.request.get('_page'),
+                                entity: app.request.get('entity'),
+                                action: 'section',
+                                _key: app.request.get('_key'),
                             }) %}
-                            {% set entityName = title|humanize|title|split(' ')|join ~ 'Section' %}
+                            {% set entityName = easyadmin_entity_name(section.class) %}
                             {% set entityConfig = easyadmin_entity(entityName) %}
                             {% if entityConfig.redirect is defined and entityConfig.redirect is not empty %}
                                 {% set _request_parameters = _request_parameters|merge(entityConfig.redirect) %}
                             {% else %}
-                                {% set _request_parameters = _request_parameters|merge({ entity: entityName, action: 'edit', id: section.id }) %}
+                                {% set _request_parameters = _request_parameters|merge({ entity: entityName, action: 'edit', id: attribute(sectionObj, 'id') }) %}
                             {% endif %}
                             <tr>
                                 <td>
-                                    {{ title|humanize|trans }}
+                                    {{ section.title|default(section.property|humanize)|trans }}
                                 </td>
                                 <td class="actions">
                                     <a class="text-primary action-edit" href="{{ path('easyadmin', _request_parameters|merge({referer: path('easyadmin', _referer)|url_encode})) }}">{{ 'Edit'|trans }}</a>
                                 </td>
                             </tr>
+                        {% endif %}
                         {% endfor %}
                         </tbody>
                     </table>

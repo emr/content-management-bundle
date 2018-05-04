@@ -1,16 +1,4 @@
 parameters:
 
-    emr_cm.super_classes:
-        page: Emr\CMBundle\Entity\Page
-        section: Emr\CMBundle\Entity\Section
-        general_constant: Emr\CMBundle\Entity\GeneralConstant
-        localized_constant: Emr\CMBundle\Entity\LocalizedConstant
-
-    emr_cm.annotation_classes:
-        page_class: Emr\CMBundle\Configuration\Annotations\PageClass
-        section: Emr\CMBundle\Configuration\Annotations\Section
-        general_constant: Emr\CMBundle\Configuration\Annotations\GeneralConstant
-        localized_constant: Emr\CMBundle\Configuration\Annotations\LocalizedConstant
-
     emr_cm.entity_path: 'AppBundle/Entity'
     emr_cm.entity_namespace: 'AppBundle\Entity'

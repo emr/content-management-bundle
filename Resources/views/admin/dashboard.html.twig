@@ -19,7 +19,7 @@
                     <div class="box box-primary">
                         <strong class="box-header with-border">Sayfaları düzenle</strong>
                         {% for item in edit_pages %}
-                            <a href="{{ path('easyadmin', { entity: 'PageLayout', action: 'section', _page: item.page }) }}" class="box-body">
+                            <a href="{{ path('easyadmin', { entity: 'CMSPageLayout', action: 'section', _key: item.key }) }}" class="box-body">
                                 <i class="fa fa-file-text fa-fw"></i>
                                 &nbsp;{{ item.name }}
                             </a>
@@ -28,7 +28,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                {% for entity in edit_entities %}
+                {% for entity in edit_entities|default([]) %}
                     <div class="col-sm-4">
                         <div class="box box-primary">
                             <strong class="box-header with-border">{{ entity.title|default(entity.name)|trans }}</strong>

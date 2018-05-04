@@ -5,11 +5,9 @@ namespace Emr\CMBundle\Configuration;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\Reader;
+use Emr\CMBundle\Configuration\Annotations;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
-use Symfony\Component\PropertyAccess\Exception\NoSuchIndexException;
-use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
-use Symfony\Component\PropertyAccess\PropertyAccessor;
 
 class AnnotationEntityConfig extends EntityConfig
 {
@@ -17,11 +15,6 @@ class AnnotationEntityConfig extends EntityConfig
      * @var Finder
      */
     private $finder;
-
-//    /**
-//     * @var PropertyAccessor
-//     */
-//    private $accessor;
 
     /**
      * @var Reader
@@ -41,15 +34,24 @@ class AnnotationEntityConfig extends EntityConfig
     /**
      * @var array
      */
-    private $classes;
+    private $annotationClasses = [
+        self::PAGE => Annotations\Page::class,
+        self::USER => Annotations\User::class,
+        self::CONSTANT => Annotations\Constant::class,
+        self::LOCALIZED_CONSTANT => Annotations\LocalizedConstant::class,
+        'admin' => Annotations\Admin::class,
+        'section' => Annotations\Section::class,
+        'fields' => Annotations\Field::class,
+    ];
 
     /**
      * @var array
      */
     private $config = [
-        'page_class' => null,
-        'general_constant' => null,
-        'localized_constant' => null,
+        self::PAGE => null,
+        self::CONSTANT => null,
+        self::LOCALIZED_CONSTANT => null,
+        'admin' => null,
         'section' => null,
     ];
 
@@ -62,17 +64,14 @@ class AnnotationEntityConfig extends EntityConfig
 //     * @param Reader $reader
      * @param string $path
      * @param string $namespace
-     * @param string[] $classes
      */
-    public function __construct(/*Reader $reader,*/ $path, $namespace, $classes)
+    public function __construct(/*Reader $reader,*/ $path, $namespace)
     {
         $this->finder = new Finder();
         $this->reader = new AnnotationReader();
         AnnotationRegistry::registerUniqueLoader('class_exists');
-//        $this->accessor = new PropertyAccessor();
         $this->path = $path;
         $this->namespace = $namespace;
-        $this->classes = $classes;
     }
 
     private function makeClassConfiguration()
@@ -85,36 +84,20 @@ class AnnotationEntityConfig extends EntityConfig
                 $this->namespace . ($relativePath ? '\\'.str_replace('/', '\\', $relativePath) : null) . '\\' . $file->getBasename('.php')
             );
 
-            foreach ($this->classes as $annotationClass)
+            foreach ($this->annotationClasses as $annotationClass)
                 if ($classAnnotation = $this->reader->getClassAnnotation($class, $annotationClass))
-                    $this->config[array_flip($this->classes)[$annotationClass]][$class->getName()]['class'] = $classAnnotation;
+                    $this->config[array_flip($this->annotationClasses)[$annotationClass]][$class->getName()]['class'] = (array)$classAnnotation;
         }
 
         $this->done = true;
     }
 
-    public function getPageClass(): string
+    public function getClass(string $for): string
     {
         if (!$this->done)
             $this->makeClassConfiguration();
 
-        return key($this->config['page_class']);
-    }
-
-    public function getGeneralConstantClass(): string
-    {
-        if (!$this->done)
-            $this->makeClassConfiguration();
-
-        return key($this->config['general_constant']);
-    }
-
-    public function getLocalizedConstantClass(): string
-    {
-        if (!$this->done)
-            $this->makeClassConfiguration();
-
-        return key($this->config['localized_constant']);
+        return key($this->config[$for]);
     }
 
     /**
@@ -125,68 +108,73 @@ class AnnotationEntityConfig extends EntityConfig
         if (!$this->done)
             $this->makeClassConfiguration();
 
-//        if ($this->config['section'])
-//            return $this->config['section'];
-//
-//        foreach ((new \ReflectionClass($this->getPageClass()))->getProperties() as $property)
-//            /** @var Section $annotation */
-//            if ($annotation = $this->reader->getPropertyAnnotation($property, $this->classes['section']))
-//                $this->config['section'][] = [
-//                    'property' => $property->getName(),
-//                    'class' => $annotation->class
-//                ];
-//
-//        return $this->config['section'];
-
         $sections = [];
 
-        foreach ($this->config['section'] as $class => $annotation)
-            $sections[] = [
+        foreach ($this->config['section'] as $class => $config)
+            $sections[$config['class']['name']] = [
                 'class' => $class,
-                'property' => $annotation['class']->name
+                'property' => $config['class']['name'],
+                'label' => $config['class']['label'],
+                'admin' => $config['class']['admin'],
             ];
-
 
         return $sections;
     }
 
-//    public function getConfig($key, ...$calls)
-//    {
-//        if (!$this->done)
-//            $this->makeClassConfiguration();
-//
-//        $try = [];
-//
-//        $getFirst = $calls[0] ?? true;
-//
-//        if (true === $getFirst)
-//        {
-//            array_push($try, "[{$key}][0]");
-//        }
-//        elseif (false === $getFirst)
-//        {
-//            array_push($try, "[{$key}]");
-//        }
-//        else
-//        {
-//            $try = [];
-//            $call = "[{$key}]";
-//            for ($i = 0; $i < count($calls); $i++)
-//            {
-//                array_push($try, "{$call}.{$calls[$i]}");
-//                array_push($try, "{$call}[{$calls[$i]}]");
-//
-//                $call = $try[count($try) - 1];
-//            }
-//        }
-//
-//        while ($call = array_pop($try))
-//        {
-//            try {
-//                return $this->accessor->getValue($this->config, $call);
-//            } catch (NoSuchPropertyException $e) {
-//            } catch (NoSuchIndexException $e) {
-//            }
-//        }
-//    }
+    public function getSectionClasses(): array
+    {
+        return array_keys($this->config['section']);
+    }
+
+    public function getFields(string $for, callable $filter = null): array
+    {
+        $fields = [];
+        try {
+            $class = new \ReflectionClass($for);
+        } catch (\ReflectionException $e) {
+            $class = new \ReflectionClass($this->getClass($for));
+        }
+        foreach ($class->getProperties() as $property)
+        {
+            if ($annotation = $this->reader->getPropertyAnnotation($property, $this->annotationClasses['fields']))
+            {
+                while (isset($fields[$annotation->position]))
+                    $annotation->position += 1;
+
+                $fields[$annotation->position] = array_filter([
+                    'property' => $property->getName(),
+                    'type' => $annotation->type,
+                    'label' => $annotation->label,
+                    'format' => $annotation->format,
+                    'help' => $annotation->help,
+                    'field_type' => $annotation->fieldType,
+                    'data_type' => $annotation->dataType,
+                    'virtual' => $annotation->virtual,
+                    'sortable' => $annotation->sortable,
+                    'template' => $annotation->template,
+                    'type_options' => $annotation->typeOptions,
+                    'form_group' => $annotation->formGroup,
+                    'css_class' => $annotation->cssClass,
+                    'role_require' => $annotation->roleRequire,
+                    'actions' => $annotation->actions,
+                ]);
+            }
+        }
+
+        ksort($fields);
+        return array_filter(array_values($fields), $filter);
+    }
+
+    public function getAdminClasses(): array
+    {
+        if (!$this->done)
+            $this->makeClassConfiguration();
+
+        return array_map(
+            function($c) {
+                return $c['class'];
+            },
+            $this->config['admin']
+        );
+    }
 }

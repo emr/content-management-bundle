@@ -8,9 +8,9 @@ use Emr\CMBundle\Entity\Section;
 
 /**
  * @ORM\Entity
- * @ORM\Table("cms_example_sections")
- * @CMS\Section("example")
+ * @ORM\Table("cms_foo_sections")
+ * @CMS\Section(name="foo", label="Foo)
  */
-class ExampleSection extends Section
+class FooSection extends Section
 {
 }

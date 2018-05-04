@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\MappedSuperclass()
  */
-abstract class Page implements \ArrayAccess
+abstract class Page
 {
     /**
      * @var integer
@@ -19,9 +19,15 @@ abstract class Page implements \ArrayAccess
 
     /**
      * @var string
-     * @ORM\Column(name="key", type="smallint", length=32, nullable=false)
+     * @ORM\Column(name="_key", length=32)
      */
-    protected $page;
+    protected $key;
+
+    /**
+     * @var string
+     * @ORM\Column()
+     */
+    protected $name;
 
     /**
      * Will be configured as many to one
@@ -29,82 +35,64 @@ abstract class Page implements \ArrayAccess
      */
     protected $constant;
 
-    /**
-     * @var array
-     */
-    protected $sections;
-
-//    public function loadMetadata(ORM\ClassMetadata $metadata)
-//    {
-//        $builder = new ORM\Builder\ClassMetadataBuilder($metadata);
-//
-//        $builder->setMappedSuperClass();
-//
-//        $builder->createField('id', 'smallint')
-//            ->makePrimaryKey()
-//            ->generatedValue()
-//        ->build();
-//
-//        $builder->createField('page', 'string')
-//            ->nullable(false)
-//        ->build();
-//
-//        $builder->createField('name', 'string')
-//            ->length(32)
-//        ->build();
-//
-//        $builder->createManyToOne('constant', EntityConfig::getConfig('localized_constant'))
-//            ->addJoinColumn('locale', 'locale')
-//        ->build();
-//    }
-
     public function getId()
     {
         return $this->id;
     }
 
-    public function getPage()
+    public function getKey()
     {
-        return $this->page;
+        return $this->key;
     }
 
-    public function offsetExists($offset)
+    public function setKey(string $key)
     {
-        return array_key_exists($offset, $this->sections);
+        $this->key = $key;
     }
 
-    public function offsetGet($offset)
+    public function getName()
     {
-        return $this->sections[$offset];
+        return $this->name;
     }
 
-    public function offsetSet($offset, $value)
+    public function setName(string $name)
     {
-        $this->sections[$offset] = $value;
+        $this->name = $name;
     }
 
-    public function offsetUnset($offset)
+    public function setConstant(LocalizedConstant $constant)
     {
-        unset($this->sections[$offset]);
+        $this->constant = $constant;
     }
 
-    public function __call($name, $arguments)
+    public function getConstant(): ?LocalizedConstant
     {
-        switch ($name)
-        {
-            case 'settings': return $this->constant; break;
-            case 'locale': return $this->constant->getLocale(); break;
-            default: return $this->$name;
-        }
+        return $this->constant;
     }
 
-    public function __get($name)
+    public function getSettings()
     {
-        return $this->__call($name, []);
+        $this->getConstant();
+    }
+
+    public function setSections($sections)
+    {
+        foreach ($sections as $section)
+            $this->{$section['property']} = (new $section['class']())->addPage($this);
+    }
+
+    public function getSections()
+    {
+        return [];
+    }
+
+    public function getLocale()
+    {
+        return $this->getConstant()->getLocale();
     }
 
     public function __toString()
     {
-        return (string) $this->page . ' / ' . $this->constant;
+        return (string) $this->key . ' / ' . $this->constant;
     }
 }

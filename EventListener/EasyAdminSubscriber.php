@@ -16,6 +16,5 @@ class EasyAdminSubscriber implements EventSubscriberInterface
 
     public function preInitialize()
     {
-        dump(5);
     }
 }

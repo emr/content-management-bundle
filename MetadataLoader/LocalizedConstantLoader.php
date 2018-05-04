@@ -4,6 +4,7 @@ namespace Emr\CMBundle\MetadataLoader;
 
 use Doctrine\ORM\Mapping\Builder\ClassMetadataBuilder;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Emr\CMBundle\Configuration\EntityConfig;
 
 class LocalizedConstantLoader extends AbstractLoader
 {
@@ -11,9 +12,9 @@ class LocalizedConstantLoader extends AbstractLoader
     {
         $builder = new ClassMetadataBuilder($metadata);
 
-        $builder->createManyToOne('constant', $this->config->getGeneralConstantClass())
+        $builder->createManyToOne('constant', $this->config->getClass(EntityConfig::CONSTANT))
             ->fetchEager()
-            ->addJoinColumn('constant_id', 'id')
+            ->addJoinColumn('constant_id', 'id', false)
         ->build();
     }
 }

@@ -3,6 +3,8 @@
 namespace Emr\CMBundle\DependencyInjection;
 
 use Emr\CMBundle\Configuration\EntityConfig;
+use Emr\CMBundle\EasyAdmin\EasyAdminConfiguration;
+use Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
@@ -33,7 +35,9 @@ class EmrCMExtension extends Extension implements PrependExtensionInterface
     {
         $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
 
+        $container->setParameter('emr_cm.config', $config);
         $container->setParameter('emr_cm.config_type', $config['type']);
+        $container->setParameter('emr_cm.easy_admin_settings', $config['easy_admin_settings']);
 
         $this->load(
             $config,
@@ -41,18 +45,13 @@ class EmrCMExtension extends Extension implements PrependExtensionInterface
         );
 
         if ($config['make_easy_admin_config'])
-            $container->prependExtensionConfig('easy_admin', $this->makeEasyAdminConfig($container->get('emr_cm.entity_config')));
+            $container->prependExtensionConfig('easy_admin', $this->makeEasyAdminConfig($config['easy_admin_settings'], $container));
     }
 
-    private function makeEasyAdminConfig(EntityConfig $config)
+    private function makeEasyAdminConfig(array $settings, ContainerBuilder $container)
     {
-        return [
-            'entities' => [
-                'PageAdmin' => [
-//                    'role_require' => 'ROLE_SUPER_ADMIN',
-                    'class' => $config->getPageClass()
-                ]
-            ]
-        ];
+        $configurator = new EasyAdminConfiguration($settings, $container->get('emr_cm.entity_config'), $container->get('emr_cm.easy_admin_entity_naming'));
+
+        return $configurator->getFullConfiguration();
     }
 }

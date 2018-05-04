@@ -10,8 +10,13 @@ use Doctrine\Common\Annotations\Annotation;
  */
 class Section
 {
+    /** @var string */
+    public $name;
+    /** @var string */
+    public $label;
     /**
+     * EasyAdmin entity name
      * @var string
      */
-    public $name;
+    public $admin;
 }

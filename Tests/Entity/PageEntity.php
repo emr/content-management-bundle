@@ -2,13 +2,16 @@
 
 namespace Emr\CMBundle\Tests\Entity;
 
+use Doctrine\ORM\Mapping as ORM;
 use Emr\CMBundle\Configuration\Annotations as CMS;
-use Emr\CMBundle\Entity\Page;
 
 /**
- * @CMS\PageClass()
+ * Example entity
+ * @ORM\Entity
+ * @ORM\Table("cms_pages")
+ * @CMS\Page
  */
-class PageEntity extends Page
+class PageEntity extends \Emr\CMBundle\Entity\Page
 {
     /**
      * @CMS\Section("example")

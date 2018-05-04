@@ -6,9 +6,12 @@ services:
 #            - '@annotation_reader'
             - '%kernel.root_dir%/../src/%emr_cm.entity_path%'
             - '%emr_cm.entity_namespace%'
-            - '%emr_cm.annotation_classes%'
 
     emr_cm.entity_config: "@emr_cm.entity_config.annotation"
+
+    emr_cm.easy_admin_entity_naming:
+        class: Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming
+        arguments: ['%emr_cm.easy_admin_settings%']
 
     Emr\CMBundle\EventListener\DoctrineSubscriber:
         public: false
@@ -21,8 +24,17 @@ services:
         tags:
             - { name: kernel.event_subscriber }
 
+    Emr\CMBundle\Twig\IntlExtension:
+        arguments: ['@request_stack']
+        tags:
+            - { name: twig.extension }
+
+    Emr\CMBundle\Twig\EasyAdmin:
+        arguments: ['@emr_cm.easy_admin_entity_naming']
+        tags:
+            - { name: twig.extension }
+
     Emr\CMBundle\Form\Admin\SectionType:
         public: false
         arguments: ["@emr_cm.entity_config"]
-        tags:
-            - { name: form.type }
+        tags: [ { name: form.type } ]

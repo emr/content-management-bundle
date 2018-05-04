@@ -2,21 +2,15 @@
 
 namespace Emr\CMBundle\Controller;
 
-use Emr\CMBundle\Entity\Page;
-
 trait PageMiddleware
 {
     /**
      * * filter results by page key
      */
-    protected function listAction()
+    protected function listPageAdminAction()
     {
-        if ($this->entity['class'] == Page::class)
-        {
-            // filter results
-            if ($page = $this->request->query->get('_page'))
-                $this->entity['list']['dql_filter'] = "entity.page = '{$page}'";
-        }
+        if ($key = $this->request->query->get('_key'))
+            $this->entity['list']['dql_filter'] = "entity.key = '{$key}'";
 
         return parent::listAction();
     }

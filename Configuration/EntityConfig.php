@@ -2,39 +2,64 @@
 
 namespace Emr\CMBundle\Configuration;
 
-use Doctrine\Common\Annotations\Reader;
-use Emr\CMBundle\Annotations\PageClass;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
-use Symfony\Component\PropertyAccess\Exception\NoSuchIndexException;
-use Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException;
-use Symfony\Component\PropertyAccess\PropertyAccessor;
-
 abstract class EntityConfig
 {
-    public const CONFIG_SECTION             = 'config.section';
-    public const CONFIG_PAGE_CLASS          = 'config.page_class';
-    public const CONFIG_GENERAL_CONSTANT    = 'config.general_constant';
-    public const CONFIG_LOCALIZED_CONSTANT  = 'config.localized_constant';
+    public const PAGE               = 'page';
+    public const USER               = 'user';
+    public const CONSTANT           = 'constant';
+    public const LOCALIZED_CONSTANT = 'localized_constant';
 
-    abstract public function getPageClass(): string;
-    abstract public function getGeneralConstantClass(): string;
-    abstract public function getLocalizedConstantClass(): string;
+    /**
+     * Get class for a key
+     * @param string $for
+     * @return string
+     */
+    abstract public function getClass(string $for): string;
+
+    /**
+     * Get fields for a class
+     * @param string $for       Class or one of self constants
+     * @param callable $filter  Filter to be parameter of array_filter
+     * @return array
+     */
+    abstract public function getFields(string $for, callable $filter = null): array;
+
+    /**
+     * Get CMS sections
+     * @return array
+     */
     abstract public function getSections(): array;
 
-    public function isPageClass(string $class): bool
+    /**
+     * Get classes defined as admin
+     * @return array
+     */
+    abstract public function getAdminClasses(): array;
+
+    /**
+     * Get classes defined as section
+     * @return array
+     */
+    public function getSectionClasses(): array
     {
-        return $class == $this->getPageClass();
+        return array_map(
+            function($section) {
+                return $section['class'];
+            },
+            $this->getSections()
+        );
     }
 
-    public function isGeneralConstantClass(string $class): bool
+    public function getSection(string $prop): array
     {
-        return $class == $this->getGeneralConstantClass();
-    }
+        $sections = $this->getSections();
 
-    public function isLocalizedConstantClass(string $class): bool
-    {
-        return $class == $this->getLocalizedConstantClass();
+        if (!($section = $sections[$prop] ?? null))
+            foreach ($sections as $item)
+                if ($item['class'] == $prop)
+                    $section = $item;
+
+        return $section;
     }
 
     public function isSection(string $class): bool

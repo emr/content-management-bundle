@@ -2,9 +2,10 @@
 
 namespace Emr\CMBundle\Controller;
 
+use EasyCorp\Bundle\EasyAdminBundle\Exception\ForbiddenActionException;
+use Emr\CMBundle\Configuration\EntityConfig;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Emr\CMBundle\Entity\Page;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AdminController as BaseAdminController;
 
 class AdminController extends BaseAdminController
@@ -12,30 +13,61 @@ class AdminController extends BaseAdminController
     use SecurityMiddleware;
     use PageMiddleware;
     use UserMiddleware;
+    use ConstantMiddleware;
 
     /**
-     * @Route("/dashboard", name="admin_dashboard")
+     * @var array
      */
-    public function dashboardIndexAction(Request $request)
+    protected $cmsConfig;
+
+    /**
+     * @var EntityConfig
+     */
+    protected $cmsEntityConfig;
+
+    /**
+     * @Route("/", name="easyadmin")
+     */
+    public function indexAction(Request $request)
     {
-        $em = $this->getDoctrine()->getManager();
-        $pages = $em->getRepository(Page::class)->findBy(['constant' => $request->getLocale()]);
+        try {
+            return parent::indexAction($request);
+        } catch (ForbiddenActionException $e) {
+            return $this->redirectToRoute('fos_user_security_login');
+        }
+    }
+
+    public function initialize(Request $request)
+    {
+        $this->cmsConfig = $this->getParameter('emr_cm.config');
+        $this->cmsEntityConfig = $this->get('emr_cm.entity_config');
+
+        parent::initialize($request);
+
+        $this->checkPermissions($this->entity, true);
+        if ($request->query->get('entity'))
+            $this->checkEntityActionPermissions();
+    }
+
+    public function dashboardAction()
+    {
+        $pages = $this->em->getRepository($this->cmsEntityConfig->getClass(EntityConfig::PAGE))->findAll();
 
 //        $entities = [
 //            [
 //                'name' => 'Model',
 //                'title' => 'Models',
 //                'identifier' => 'code',
-//                'rows' => $em->getRepository(Model::class)->findBy([], ['id' => 'DESC'], 10)
+//                'rows' => $this->em->getRepository(Model::class)->findBy([], ['id' => 'DESC'], 10)
 //            ],
 //            [
 //                'name' => 'News',
 //                'identifier' => 'title',
-//                'rows' => $em->getRepository(News::class)->findBy([], ['id' => 'DESC'], 10)
+//                'rows' => $this->em->getRepository(News::class)->findBy([], ['id' => 'DESC'], 10)
 //            ],
 //        ];
 
-        return $this->render('admin/dashboard.html.twig', [
+        return $this->renderTemplate('dashboard', '@EmrCM/admin/dashboard.html.twig', [
             'edit_pages' => $pages,
 //            'edit_entities' => $entities,
         ]);
@@ -43,13 +75,20 @@ class AdminController extends BaseAdminController
 
     public function sectionAction()
     {
-        $em = $this->getDoctrine()->getManager();
-        $pages = $em->getRepository(Page::class)->findBy([
-            'page' => $this->request->query->get('_page')
+        $pages = $this->em->getRepository($this->cmsEntityConfig->getClass(EntityConfig::PAGE))->findBy([
+            'key' => $this->request->query->get('_key')
         ]);
 
-        return $this->render('admin/section_list.html.twig', [
+        return $this->renderTemplate('section', '@EmrCM/admin/section_list.html.twig', [
             'pages' => $pages,
+            'sections' => $this->cmsEntityConfig->getSections(),
         ]);
+    }
+
+    protected function renderTemplate($actionName, $templatePath, array $parameters = array())
+    {
+        $parameters['menu_pages'] = $this->em->getRepository($this->cmsEntityConfig->getClass(EntityConfig::PAGE))->findAll();
+        $parameters['cms_config'] = $this->cmsConfig;
+        return $this->render($templatePath, $parameters);
     }
 }

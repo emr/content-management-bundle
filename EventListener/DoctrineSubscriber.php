@@ -29,17 +29,21 @@ class DoctrineSubscriber implements EventSubscriber
     {
         $metadata = $e->getClassMetadata();
 
-        if ($this->config->isGeneralConstantClass($metadata->getName()))
-            $loader = MetadataLoader\GeneralConstantLoader::class;
-
-        if ($this->config->isLocalizedConstantClass($metadata->getName()))
-            $loader = MetadataLoader\LocalizedConstantLoader::class;
-
-        if ($this->config->isPageClass($metadata->getName()))
-            $loader = MetadataLoader\PageLoader::class;
-
-        if ($this->config->isSection($metadata->getName()))
-            $loader = MetadataLoader\SectionLoader::class;
+        switch ($metadata->getName())
+        {
+            case $this->config->getClass(EntityConfig::CONSTANT):
+                $loader = MetadataLoader\GeneralConstantLoader::class;
+                break;
+            case $this->config->getClass(EntityConfig::LOCALIZED_CONSTANT):
+                $loader = MetadataLoader\LocalizedConstantLoader::class;
+                break;
+            case $this->config->getClass(EntityConfig::PAGE):
+                $loader = MetadataLoader\PageLoader::class;
+                break;
+            default:
+                if ($this->config->isSection($metadata->getName()))
+                    $loader = MetadataLoader\SectionLoader::class;
+        }
 
         if (isset($loader))
             (new $loader($this->config))->loadMetadata($metadata);

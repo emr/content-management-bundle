@@ -1,0 +1,27 @@
+{% extends '@EasyAdmin/default/menu.html.twig' %}
+
+{% import _self as helper %}
+
+{% block menu_item %}
+    {% if not cms_config['easy_admin_settings']['use_security'] or item.role_require is not defined or (item.role_require and is_granted(item.role_require)) %}
+        {{ parent() }}
+    {% endif %}
+{% endblock menu_item %}
+
+{% block main_menu %}
+    {% for item in _menu_items %}
+        {% if item.embed_pages|default(false) %}
+            {% for page in menu_pages %}
+                {% set item = item|merge({
+                    'label': page.name,
+                    'params': item.params|merge({'_key': page.key})
+                }) %}
+                <li class="{{ app.request.query.get('_key') == page.key ? 'active' }}">
+                    {{ helper.render_menu_item(item, _entity_config.translation_domain|default('messages')) }}
+                </li>
+            {% endfor %}
+        {% else %}
+            {{ block('menu_item') }}
+        {% endif %}
+    {% endfor %}
+{% endblock main_menu %}
