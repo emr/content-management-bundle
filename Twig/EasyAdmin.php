@@ -3,6 +3,7 @@
 namespace Emr\CMBundle\Twig;
 
 use Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming;
+use Emr\CMBundle\Exception\EntityNameNotFoundException;
 
 class EasyAdmin extends \Twig_Extension
 {
@@ -21,11 +22,15 @@ class EasyAdmin extends \Twig_Extension
 
     public function getFunctions()
     {
-        return [new \Twig_SimpleFunction('easyadmin_entity_name', [$this, 'name'])];
+        return [new \Twig_SimpleFunction('easyadmin_entity_name', [$this, 'getName'])];
     }
 
-    public function name($class)
+    public function getName($class)
     {
-        return $this->naming->name($class);
+        try {
+            return $this->naming->get($class, true);
+        } catch (EntityNameNotFoundException $e) {
+            return $this->naming->set($class);
+        }
     }
 }

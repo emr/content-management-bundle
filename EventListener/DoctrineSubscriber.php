@@ -3,7 +3,9 @@
 namespace Emr\CMBundle\EventListener;
 
 use Doctrine\Common\EventSubscriber;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Emr\CMBundle\Configuration\EntityConfig;
 use Emr\CMBundle\MetadataLoader;
@@ -22,7 +24,14 @@ class DoctrineSubscriber implements EventSubscriber
 
     public function getSubscribedEvents()
     {
-        return [Events::loadClassMetadata];
+        return [
+            Events::loadClassMetadata,
+            Events::preUpdate,
+            Events::postUpdate,
+            Events::prePersist,
+            Events::postPersist,
+            Events::preFlush,
+        ];
     }
 
     public function loadClassMetadata(LoadClassMetadataEventArgs $e)
@@ -47,5 +56,30 @@ class DoctrineSubscriber implements EventSubscriber
 
         if (isset($loader))
             (new $loader($this->config))->loadMetadata($metadata);
+    }
+
+    public function preUpdate(...$args)
+    {
+        dump($args);
+    }
+
+    public function postUpdate(...$args)
+    {
+        dump($args);
+    }
+
+    public function prePersist(...$args)
+    {
+        dump($args);
+    }
+
+    public function postPersist(...$args)
+    {
+        dump($args);
+    }
+
+    public function preFlush(...$args)
+    {
+        dump($args);
     }
 }

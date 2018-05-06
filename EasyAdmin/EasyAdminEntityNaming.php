@@ -2,19 +2,21 @@
 
 namespace Emr\CMBundle\EasyAdmin;
 
+use Emr\CMBundle\Exception\EntityNameNotFoundException;
 use Emr\CMBundle\Exception\SameEntityNameException;
 
 class EasyAdminEntityNaming
 {
+    // global classes
+    public const CONSTANT = 'constant';
+    public const LOCALIZED_CONSTANT = 'localized_constant';
+    public const PAGE_ADMIN = 'page_admin';
+    public const PAGE_LAYOUT = 'page_layout';
+
     /**
      * @var array
      */
-    private $names = [
-        'constant' => 'GeneralConstant',
-        'localized_constant' => 'LocalizedConstant',
-        'page_admin' => 'PageAdmin',
-        'page_layout' => 'PageLayout',
-    ];
+    private $names = [];
 
     /**
      * @var array
@@ -24,21 +26,58 @@ class EasyAdminEntityNaming
     public function __construct($settings)
     {
         $this->settings = $settings;
+
+        // register global used names
+        foreach ([
+            self::CONSTANT => 'GeneralConstant',
+            self::LOCALIZED_CONSTANT => 'LocalizedConstant',
+            self::PAGE_ADMIN => 'PageAdmin',
+            self::PAGE_LAYOUT => 'PageLayout',
+        ] as $class => $name)
+            $this->set($name, $class);
     }
 
-    public function name(string $nameOrClass, string $class = null, $exception = false): string
+    /**
+     * @param string $name       | name or class
+     * @param string|null $class | class
+     * @param bool $exception
+     * @return string|null
+     */
+    public function set(string $name, string $class = null, bool $exception = true): ?string
     {
-        if ($class)
+        if (!$class)
         {
-            if (in_array($nameOrClass, $this->names) && $exception)
-                throw new SameEntityNameException("Entity name \"{$nameOrClass}\" is already using. Define another name for it.");
+            $class = $name;
+            $name = basename(str_replace('\\', '/', $class));
+        }
 
-            $this->names[$class] = $nameOrClass;
-            $nameOrClass = $class;
+        if (in_array($name, $this->names))
+        {
+            if ($exception)
+                throw new SameEntityNameException("Entity name \"{$name}\" is already using. Define another name for it.");
         }
         else
-            $this->names[$nameOrClass] =  $this->names[$nameOrClass] ?? basename(str_replace('\\', '/', $nameOrClass));
+        {
+            $this->names[$class] = $name;
+        }
 
-        return $this->settings['entity_prefix'].$this->names[$nameOrClass];
+        return $this->get($class);
+    }
+
+    /**
+     * @param string $class
+     * @param bool $exception
+     * @return string|null
+     */
+    public function get(string $class, bool $exception = false): ?string
+    {
+        if (!isset($this->names[$class]))
+        {
+            if ($exception)
+                throw new EntityNameNotFoundException("Entity class \"{$class}\" not registered.");
+            return null;
+        }
+
+        return $this->settings['entity_prefix'].$this->names[$class];
     }
 }

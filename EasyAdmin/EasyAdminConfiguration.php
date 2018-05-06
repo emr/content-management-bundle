@@ -3,10 +3,9 @@
 namespace Emr\CMBundle\EasyAdmin;
 
 use Emr\CMBundle\Configuration\EntityConfig;
-use Emr\CMBundle\Exception\SameEntityNameException;
 
 /**
- * @todo cache'ler kaldırılabilir.
+ * @todo 1 kere kullanım varsa cache'ler kaldırılacak.
  */
 class EasyAdminConfiguration
 {
@@ -54,9 +53,10 @@ class EasyAdminConfiguration
 
         foreach ($this->entityConfig->getSections() as $section)
         {
-            $name = $this->naming->name(
-                $settings['entities'][$section['class']] ?? basename(str_replace('\\', '/', $section['class'])),
-                $section['class']
+            $name = $this->naming->set(
+                $settings['entities'][$section['class']] ?? $section['class'],
+                null,
+                false
             );
 
             $this->config['section_entities'][$name] = [
@@ -67,7 +67,33 @@ class EasyAdminConfiguration
                 ],
                 'class' => $section['class'],
                 'label' => $section['label'],
-//                ],
+                'form' => [
+                    'fields' => [
+                        [
+                            'role_require' => 'ROLE_SUPER_ADMIN',
+                            'type' => 'section',
+                            'label' => 'Advanced',
+                            'css_class' => 'col-md-offset-2',
+                        ],
+                        [
+                            'role_require' => 'ROLE_SUPER_ADMIN',
+                            'property' => 'identifier',
+                        ],
+                        [
+                            'role_require' => 'ROLE_SUPER_ADMIN',
+                            'property' => 'pages',
+                            'type_options' => [
+                                'by_reference' => false
+                            ]
+                        ],
+                        [
+                            'role_require' => 'ROLE_SUPER_ADMIN',
+                            'type' => 'section',
+                            'label' => 'User values',
+                            'css_class' => 'col-md-offset-2',
+                        ],
+                    ]
+                ],
                 'new' => [
                     'fields' => $this->entityConfig->getFields($section['class'], function($field) {
                         return in_array('new', $field['actions']);
@@ -77,15 +103,7 @@ class EasyAdminConfiguration
                     'fields' => array_merge(
                         $this->entityConfig->getFields($section['class'], function($field) {
                             return in_array('edit', $field['actions']);
-                        }),
-                        [
-                            [
-                                'property' => 'page',
-                                'type_options' => [
-                                    'by_reference' => true
-                                ]
-                            ]
-                        ]
+                        })
                     )
                 ]
             ];
@@ -97,7 +115,7 @@ class EasyAdminConfiguration
     public function getConstantEntities(): array
     {
         return $this->config['constant_entities'] ?? $this->config['constant_entities'] = [
-            $this->naming->name('constant') => [
+            $this->naming->get(EasyAdminEntityNaming::CONSTANT) => [
                 'class' => $this->entityConfig->getClass(EntityConfig::CONSTANT),
                 'action_roles' => [
                     'new' => 'ROLE_ADMIN',
@@ -111,7 +129,7 @@ class EasyAdminConfiguration
                     })
                 ]
             ],
-            $this->naming->name('localized_constant') => [
+            $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT) => [
                 'class' => $this->entityConfig->getClass(EntityConfig::LOCALIZED_CONSTANT),
                 'action_roles' => [
                     'new' => 'ROLE_ADMIN',
@@ -171,7 +189,7 @@ class EasyAdminConfiguration
     public function getPageEntities(): array
     {
         return $this->config['page_entities'] ?? $this->config['page_entities'] = [
-            $this->naming->name('page_admin') => [
+            $this->naming->get(EasyAdminEntityNaming::PAGE_ADMIN) => [
                 'role_require' => 'ROLE_SUPER_ADMIN',
                 'class' => $this->entityConfig->getClass(EntityConfig::PAGE),
                 'list' => [
@@ -217,9 +235,12 @@ class EasyAdminConfiguration
                             'type' => 'Emr\CMBundle\Form\Admin\SectionType',
                         ]
                     ]
+                ],
+                'edit' => [
+                    'fields' => $this->entityConfig->getSections()
                 ]
             ],
-            $this->naming->name('page_layout') => [
+            $this->naming->get(EasyAdminEntityNaming::PAGE_LAYOUT) => [
                 'class' => $this->entityConfig->getClass(EntityConfig::PAGE),
                 'disabled_actions' => ['list', 'delete', 'search', 'new'],
                 'list' => [
@@ -257,7 +278,7 @@ class EasyAdminConfiguration
                 [
                     'label' => 'Dashboard',
                     'icon' => 'dashboard',
-                    'entity' => $this->naming->name('page_admin'), // herhangi bir entity
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::PAGE_ADMIN), // herhangi bir entity
                     'params' => [
                         'action' => 'dashboard',
                     ],
@@ -266,7 +287,7 @@ class EasyAdminConfiguration
                 [
                     'label' => 'General settings',
                     'icon' => 'cog',
-                    'entity' => $this->naming->name('constant'),
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::CONSTANT),
                     'params' => [
                         'action' => 'edit',
                     ]
@@ -274,12 +295,12 @@ class EasyAdminConfiguration
                 [
                     'label' => 'Localized settings',
                     'icon' => 'cog',
-                    'entity' => $this->naming->name('localized_constant'),
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT),
                 ],
                 [
                     'label' => 'Add localized constant',
                     'icon' => 'cog',
-                    'entity' => $this->naming->name('localized_constant'),
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT),
                     'role_require' => 'ROLE_SUPER_ADMIN',
                     'params' => [
                         'action' => 'new'
@@ -291,7 +312,7 @@ class EasyAdminConfiguration
                 [
                     'embed_pages' => true,
 //                'label' => '%%label%%',
-                    'entity' => $this->naming->name('page_layout'),
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::PAGE_LAYOUT),
                     'params' => [
                         'action' => 'section',
 //                    '_page' => '%%key%%',
@@ -304,7 +325,7 @@ class EasyAdminConfiguration
                 ],
                 [
                     'label' => 'Pages',
-                    'entity' => $this->naming->name('page_admin'),
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::PAGE_ADMIN),
                     'params' => [
                         'action' => 'list',
                     ],

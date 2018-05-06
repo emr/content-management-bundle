@@ -123,7 +123,12 @@ class AnnotationEntityConfig extends EntityConfig
 
     public function getSectionClasses(): array
     {
-        return array_keys($this->config['section']);
+        $sections = [];
+
+        foreach ($this->config['section'] as $class => $config)
+            $sections[$config['class']['name']] = $class;
+
+        return $sections;
     }
 
     public function getFields(string $for, callable $filter = null): array
@@ -162,7 +167,7 @@ class AnnotationEntityConfig extends EntityConfig
         }
 
         ksort($fields);
-        return array_filter(array_values($fields), $filter);
+        return $filter ? array_filter(array_values($fields), $filter) : array_values($fields);
     }
 
     public function getAdminClasses(): array

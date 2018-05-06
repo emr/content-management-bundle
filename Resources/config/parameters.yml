@@ -1,4 +1,0 @@
-parameters:
-
-    emr_cm.entity_path: 'AppBundle/Entity'
-    emr_cm.entity_namespace: 'AppBundle\Entity'

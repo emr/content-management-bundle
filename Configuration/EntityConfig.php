@@ -26,6 +26,15 @@ abstract class EntityConfig
 
     /**
      * Get CMS sections
+     *
+     * [
+     *      property => [
+     *          class,              | entitiy class
+     *          property,           | property in page class
+     *          label,              | nullable
+     *          admin,              | nullable |  entity name
+     *      ]
+     * ]
      * @return array
      */
     abstract public function getSections(): array;
@@ -38,6 +47,9 @@ abstract class EntityConfig
 
     /**
      * Get classes defined as section
+     * [
+     *      property => Class
+     * ]
      * @return array
      */
     public function getSectionClasses(): array
@@ -48,6 +60,17 @@ abstract class EntityConfig
             },
             $this->getSections()
         );
+    }
+
+    /**
+     * [
+     *      Class => property
+     * ]
+     * @return array
+     */
+    public function getSectionProperties(): array
+    {
+        return array_flip($this->getSectionClasses());
     }
 
     public function getSection(string $prop): array
@@ -62,8 +85,9 @@ abstract class EntityConfig
         return $section;
     }
 
-    public function isSection(string $class): bool
+    public function isSection($class): bool
     {
+        $class = is_string($class) ? $class : get_class($class);
         foreach ($this->getSections() as $section)
             if ($class == $section['class']) return true;
 

@@ -18,19 +18,30 @@ abstract class Section
     protected $id;
 
     /**
+     * @var Page[]|ArrayCollection
+     */
+    protected $pages;
+
+    /**
      * @var Page[]
      */
-    protected $page;
+    private $removedPages = [];
+
+    /**
+     * @var Page[]
+     */
+    private $newPages = [];
 
     /**
      * @var string
      * @ORM\Column(length=128, nullable=true)
+     *
      */
     public $identifier;
 
     public function __construct()
     {
-        $this->page = new ArrayCollection();
+        $this->pages = new ArrayCollection();
     }
 
     public function getId()
@@ -41,19 +52,31 @@ abstract class Section
     public function addPage(Page $page): self
     {
 //        $page->{EntityConfig::getConfig('section', static::class, 'name')} = $this;
-        $this->page->add($page);
+        $this->pages->add($page);
+        $this->newPages[] = $page;
 
         return $this;
     }
 
     public function removePage(Page $page)
     {
-        $this->page->removeElement($page);
+        $this->pages->removeElement($page);
+        $this->removedPages[] = $page;
     }
 
-    public function getPage()
+    public function getRemovedPages(): array
     {
-        return $this->page;
+        return $this->removedPages;
+    }
+
+    public function getNewPages(): array
+    {
+        return $this->newPages;
+    }
+
+    public function getPages()
+    {
+        return $this->pages;
     }
 
     public function __toString()
@@ -63,11 +86,11 @@ abstract class Section
         if ($this->identifier)
             $str .= $this->identifier;
         else
-            if ($this->page)
-                foreach ($this->page as $page)
-                    $str .= $page->getKey().'/'.$page->getConstant()->getLocale().',';
+            if (count($this->pages) > 0)
+                foreach ($this->pages as $page)
+                    $str .= $page->getKey().'/'.$page->getConstant().',';
             else
-                $str .= 'orphan';
+                $str .= '--';
 
         return rtrim($str, ',');
     }

@@ -1,28 +1,44 @@
+parameters:
+    # default parameters
+    emr_cm.entity_path: 'AppBundle/Entity'
+    emr_cm.entity_namespace: 'AppBundle\Entity'
+    # will be filled by extension
+#    emr_cm.easy_admin_settings: ~
+
 services:
     emr_cm.entity_config.annotation:
-        public: false
         class: Emr\CMBundle\Configuration\AnnotationEntityConfig
         arguments:
 #            - '@annotation_reader'
             - '%kernel.root_dir%/../src/%emr_cm.entity_path%'
             - '%emr_cm.entity_namespace%'
 
-    emr_cm.entity_config: "@emr_cm.entity_config.annotation"
+    emr_cm.entity_config: '@emr_cm.entity_config.annotation'
 
     emr_cm.easy_admin_entity_naming:
+        public: false
         class: Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming
         arguments: ['%emr_cm.easy_admin_settings%']
 
     Emr\CMBundle\EventListener\DoctrineSubscriber:
         public: false
-        arguments: ["@emr_cm.entity_config"]
+        arguments: ['@emr_cm.entity_config']
         tags:
             - { name: doctrine.event_subscriber }
 
     Emr\CMBundle\EventListener\EasyAdminSubscriber:
         public: false
+        arguments:
+            - '@emr_cm.entity_config'
+            - '@emr_cm.easy_admin_entity_naming'
+            - '%emr_cm.easy_admin_settings%'
         tags:
             - { name: kernel.event_subscriber }
+
+    Emr\CMBundle\Form\Admin\SectionType:
+        public: false
+        arguments: ['@emr_cm.entity_config']
+        tags: [ { name: form.type } ]
 
     Emr\CMBundle\Twig\IntlExtension:
         arguments: ['@request_stack']
@@ -33,8 +49,3 @@ services:
         arguments: ['@emr_cm.easy_admin_entity_naming']
         tags:
             - { name: twig.extension }
-
-    Emr\CMBundle\Form\Admin\SectionType:
-        public: false
-        arguments: ["@emr_cm.entity_config"]
-        tags: [ { name: form.type } ]

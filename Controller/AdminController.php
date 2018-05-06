@@ -11,9 +11,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AdminController as BaseAdminContr
 class AdminController extends BaseAdminController
 {
     use SecurityMiddleware;
-    use PageMiddleware;
     use UserMiddleware;
-    use ConstantMiddleware;
 
     /**
      * @var array
