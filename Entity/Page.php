@@ -30,6 +30,18 @@ abstract class Page
     protected $name;
 
     /**
+     * @var bool
+     * @ORM\Column(type="boolean")
+     */
+    protected $menuView = true;
+
+    /**
+     * @var int
+     * @ORM\Column(type="integer")
+     */
+    protected $menuPosition = 10;
+
+    /**
      * Will be configured as many to one
      * @var LocalizedConstant
      */
@@ -58,6 +70,26 @@ abstract class Page
     public function setName(string $name)
     {
         $this->name = $name;
+    }
+
+    public function getMenuView()
+    {
+        return $this->menuView;
+    }
+
+    public function setMenuView(bool $menuView)
+    {
+        $this->menuView = $menuView;
+    }
+
+    public function getMenuPosition()
+    {
+        return $this->menuPosition;
+    }
+
+    public function setMenuPosition($menuPosition)
+    {
+        $this->menuPosition = $menuPosition;
     }
 
     public function setConstant(LocalizedConstant $constant)

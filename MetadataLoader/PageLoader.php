@@ -20,7 +20,7 @@ class PageLoader extends AbstractLoader
         {
             $builder->createManyToOne($section['property'], $section['class'])
                 ->inversedBy('pages')
-                ->addJoinColumn("{$section['property']}_section_id", 'id')
+                ->addJoinColumn("{$section['property']}_id", 'id')
                 ->cascadePersist()
             ->build();
         }

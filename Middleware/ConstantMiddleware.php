@@ -2,11 +2,29 @@
 
 namespace Emr\CMBundle\Middleware;
 
-use Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming;
+use Doctrine\ORM\EntityManager;
+use Symfony\Component\HttpFoundation\Request;
 
 class ConstantMiddleware extends BaseMiddleware
 {
     use Traits\GeneralConstant;
+
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    /**
+     * @var Request
+     */
+    protected $request;
+
+    public function __construct(EntityManager $em, Request $request, array $baseArgs)
+    {
+        $this->em = $em;
+        $this->request = $request;
+        parent::__construct(...$baseArgs);
+    }
 
     private function editGeneralConstantAction()
     {
@@ -15,6 +33,11 @@ class ConstantMiddleware extends BaseMiddleware
             $this->request->attributes->get('easyadmin'),
             ['item' => $this->getGeneralConstant()]
         ));
+    }
+
+    public function preList()
+    {
+        $this->editGeneralConstantAction();
     }
 
     public function preEdit()

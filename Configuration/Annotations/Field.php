@@ -10,9 +10,13 @@ use Doctrine\Common\Annotations\Annotation;
  */
 class Field
 {
+    /** @var array */
+    public $extra = [];
     /** @var string */
     public $type;
     /** @var string */
+    public $property;
+    /** @var mixed */
     public $label;
     /** @var string */
     public $format;
@@ -34,10 +38,14 @@ class Field
     public $formGroup;
     /** @var string */
     public $cssClass;
+    /** @var string */
+    public $basePath;
     /** @var integer */
     public $position = 100;
     /** @var string */
     public $roleRequire;
     /** @var array */
-    public $actions = ['new', 'edit'];
+    public $actions = ['form', 'list', 'new', 'edit', 'show'];
+    /** @var array */
+    public $disabledActions = [];
 }

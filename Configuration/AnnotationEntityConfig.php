@@ -6,8 +6,11 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\Reader;
 use Emr\CMBundle\Configuration\Annotations;
+use Emr\CMBundle\Exception\NoNameForSectionException;
+use Emr\CMBundle\Exception\SectionNotFoundException;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
+use Illuminate\Support\Str;
 
 class AnnotationEntityConfig extends EntityConfig
 {
@@ -51,8 +54,8 @@ class AnnotationEntityConfig extends EntityConfig
         self::PAGE => null,
         self::CONSTANT => null,
         self::LOCALIZED_CONSTANT => null,
-        'admin' => null,
-        'section' => null,
+        'admin' => [],
+        'section' => [],
     ];
 
     /**
@@ -86,7 +89,7 @@ class AnnotationEntityConfig extends EntityConfig
 
             foreach ($this->annotationClasses as $annotationClass)
                 if ($classAnnotation = $this->reader->getClassAnnotation($class, $annotationClass))
-                    $this->config[array_flip($this->annotationClasses)[$annotationClass]][$class->getName()]['class'] = (array)$classAnnotation;
+                    $this->config[array_flip($this->annotationClasses)[$annotationClass]][$class->getName()] = (array)$classAnnotation;
         }
 
         $this->done = true;
@@ -109,14 +112,36 @@ class AnnotationEntityConfig extends EntityConfig
             $this->makeClassConfiguration();
 
         $sections = [];
+        $sectionClasses = [];
 
         foreach ($this->config['section'] as $class => $config)
-            $sections[$config['class']['name']] = [
+            $sectionClasses[$config['name']] = [
                 'class' => $class,
-                'property' => $config['class']['name'],
-                'label' => $config['class']['label'],
-                'admin' => $config['class']['admin'],
+                'label' => $config['label'],
+                'admin' => $config['admin'],
             ];
+
+        $class = new \ReflectionClass($this->getClass(self::PAGE));
+
+        foreach ($class->getProperties() as $property)
+        {
+            if ($annotation = $this->reader->getPropertyAnnotation($property, $this->annotationClasses['section']))
+            {
+                if (!$annotation->name)
+//                    throw new NoNameForSectionException("The name property not specified in \"{$class->getName()}#{$property->getName()}\"");
+                    $annotation->name = $property->getName();
+
+                if (isset($sectionClasses[$annotation->name]))
+                {
+                    $sections[$annotation->name] = $sectionClasses[$annotation->name];
+                    $sections[$annotation->name]['name'] = $annotation->name;
+                    $sections[$annotation->name]['property'] = $property->getName();
+                }
+                else
+                    throw new SectionNotFoundException("No class found for section \"{$annotation->name}\"");
+
+            }
+        }
 
         return $sections;
     }
@@ -126,7 +151,7 @@ class AnnotationEntityConfig extends EntityConfig
         $sections = [];
 
         foreach ($this->config['section'] as $class => $config)
-            $sections[$config['class']['name']] = $class;
+            $sections[$config['name']] = $class;
 
         return $sections;
     }
@@ -146,23 +171,19 @@ class AnnotationEntityConfig extends EntityConfig
                 while (isset($fields[$annotation->position]))
                     $annotation->position += 1;
 
-                $fields[$annotation->position] = array_filter([
-                    'property' => $property->getName(),
-                    'type' => $annotation->type,
-                    'label' => $annotation->label,
-                    'format' => $annotation->format,
-                    'help' => $annotation->help,
-                    'field_type' => $annotation->fieldType,
-                    'data_type' => $annotation->dataType,
-                    'virtual' => $annotation->virtual,
-                    'sortable' => $annotation->sortable,
-                    'template' => $annotation->template,
-                    'type_options' => $annotation->typeOptions,
-                    'form_group' => $annotation->formGroup,
-                    'css_class' => $annotation->cssClass,
-                    'role_require' => $annotation->roleRequire,
-                    'actions' => $annotation->actions,
-                ]);
+                foreach ((array)$annotation as $key => $value)
+                {
+                    if ('extra' === $key)
+                    {
+                        foreach ($value as $_key => $_value)
+                            if (null !== $_value)
+                                $fields[$annotation->position][Str::snake($_key)] = $_value;
+                    }
+                    if (null !== $value)
+                        $fields[$annotation->position][Str::snake($key)] = $value;
+                }
+
+                $fields[$annotation->position]['property'] = $fields[$annotation->position]['property'] ?? $property->getName();
             }
         }
 
@@ -170,16 +191,24 @@ class AnnotationEntityConfig extends EntityConfig
         return $filter ? array_filter(array_values($fields), $filter) : array_values($fields);
     }
 
-    public function getAdminClasses(): array
+    public function getAdmins(): array
     {
         if (!$this->done)
             $this->makeClassConfiguration();
 
-        return array_map(
-            function($c) {
-                return $c['class'];
-            },
-            $this->config['admin']
-        );
+        $admins = [];
+
+        foreach ($this->config['admin'] as $class => $config)
+            $admins[$class] = array_merge(['class' => $class], $this->getAdmin($class));
+
+        return $admins;
+    }
+
+    public function getAdmin(string $class): array
+    {
+        if (!$this->done)
+            $this->makeClassConfiguration();
+
+        return isset($this->config['admin'][$class]) ? $this->config['admin'][$class]['settings'] : [];
     }
 }

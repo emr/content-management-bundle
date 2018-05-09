@@ -85,7 +85,20 @@ class AdminController extends BaseAdminController
 
     protected function renderTemplate($actionName, $templatePath, array $parameters = array())
     {
-        $parameters['menu_pages'] = $this->em->getRepository($this->cmsEntityConfig->getClass(EntityConfig::PAGE))->findAll();
+        $constant = $this->em->getRepository($this->cmsEntityConfig->getClass(EntityConfig::LOCALIZED_CONSTANT))->find($this->request->getLocale());
+        $parameters['menu_pages'] = $this->em->getRepository(
+            $this->cmsEntityConfig->getClass(EntityConfig::PAGE)
+        )
+            ->findBy(
+                [
+                    'constant' => $constant,
+                    'menuView' => true,
+                ],
+                [
+                    'menuPosition' => 'ASC',
+                ]
+            )
+        ;
         $parameters['cms_config'] = $this->cmsConfig;
         return $this->render($templatePath, $parameters);
     }

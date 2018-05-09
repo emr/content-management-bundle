@@ -8,9 +8,15 @@ use Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming;
 use Emr\CMBundle\Middleware;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\GenericEvent;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
 
 class EasyAdminSubscriber implements EventSubscriberInterface
 {
+    /**
+     * @var PropertyAccessor
+     */
+    private $accessor;
+
     /**
      * @var EntityConfig
      */
@@ -27,8 +33,13 @@ class EasyAdminSubscriber implements EventSubscriberInterface
      */
     private $settings;
 
-    public function __construct(EntityConfig $cmsEntityConfig, EasyAdminEntityNaming $naming, array $settings)
-    {
+    public function __construct(
+        PropertyAccessor $accessor,
+        EntityConfig $cmsEntityConfig,
+        EasyAdminEntityNaming $naming,
+        array $settings
+    ) {
+        $this->accessor = $accessor;
         $this->cmsEntityConfig = $cmsEntityConfig;
         $this->naming = $naming;
         $this->settings = $settings;
@@ -40,6 +51,7 @@ class EasyAdminSubscriber implements EventSubscriberInterface
             EasyAdminEvents::PRE_LIST   => ['preList'],
             EasyAdminEvents::PRE_EDIT   => ['preEdit'],
             EasyAdminEvents::PRE_NEW    => ['preNew'],
+            EasyAdminEvents::POST_NEW   => ['postNew'],
             EasyAdminEvents::PRE_UPDATE => ['preUpdate'],
         ];
     }
@@ -50,14 +62,7 @@ class EasyAdminSubscriber implements EventSubscriberInterface
 
         if ($entity['name'] == $this->naming->get(EasyAdminEntityNaming::CONSTANT))
         {
-            $middleware = new Middleware\ConstantMiddleware(
-                $this->settings,
-                $this->cmsEntityConfig,
-                $event->getArgument('request'),
-                $event->getArgument('em'),
-                $event->getArgument('entity')
-            );
-            $middleware->preList();
+            $this->createConstantMiddleware($event)->preList();
         }
     }
 
@@ -65,16 +70,9 @@ class EasyAdminSubscriber implements EventSubscriberInterface
     {
         $entity = $event->getSubject();
 
-        if ($entity['name'] == $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT))
+        if ($entity['name'] == $this->naming->get(EasyAdminEntityNaming::CONSTANT))
         {
-            $middleware = new Middleware\LocalizedConstantMiddleware(
-                $this->settings,
-                $this->cmsEntityConfig,
-                $event->getArgument('request'),
-                $event->getArgument('em'),
-                $event->getArgument('entity')
-            );
-            $middleware->preEdit();
+            $this->createConstantMiddleware($event)->preEdit();
         }
     }
 
@@ -84,14 +82,17 @@ class EasyAdminSubscriber implements EventSubscriberInterface
 
         if ($entity['name'] == $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT))
         {
-            $middleware = new Middleware\LocalizedConstantMiddleware(
-                $this->settings,
-                $this->cmsEntityConfig,
-                $event->getArgument('request'),
-                $event->getArgument('em'),
-                $event->getArgument('entity')
-            );
-            $middleware->preNew();
+            $this->createLocalizedConstantMiddleware($event)->preNew();
+        }
+    }
+
+    public function postNew(GenericEvent $event)
+    {
+        $entity = $event->getSubject();
+
+        if ($this->cmsEntityConfig->isSection($entity))
+        {
+            $this->createSectionMiddleware($event)->preUpdate();
         }
     }
 
@@ -101,14 +102,46 @@ class EasyAdminSubscriber implements EventSubscriberInterface
 
         if ($this->cmsEntityConfig->isSection($entity))
         {
-            $middleware = new Middleware\SectionMiddleware(
+            $this->createSectionMiddleware($event)->preUpdate();
+        }
+    }
+
+    // factories
+
+    private function createConstantMiddleware(GenericEvent $event)
+    {
+        return new Middleware\ConstantMiddleware(
+            $event->getArgument('em'),
+            $event->getArgument('request'),
+            [
                 $this->settings,
                 $this->cmsEntityConfig,
-                $event->getArgument('request'),
-                $event->getArgument('em'),
                 $event->getArgument('entity')
-            );
-            $middleware->preUpdate();
-        }
+            ]
+        );
+    }
+
+    private function createLocalizedConstantMiddleware(GenericEvent $event)
+    {
+        return new Middleware\LocalizedConstantMiddleware(
+            $event->getArgument('em'),
+            [
+                $this->settings,
+                $this->cmsEntityConfig,
+                $event->getArgument('entity')
+            ]
+        );
+    }
+
+    private function createSectionMiddleware(GenericEvent $event)
+    {
+        return new Middleware\SectionMiddleware(
+            $this->accessor,
+            [
+                $this->settings,
+                $this->cmsEntityConfig,
+                $event->getArgument('entity')
+            ]
+        );
     }
 }

@@ -5,6 +5,7 @@ namespace Emr\CMBundle\DependencyInjection;
 use Emr\CMBundle\Configuration\EntityConfig;
 use Emr\CMBundle\EasyAdmin\EasyAdminConfiguration;
 use Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming;
+use Emr\CMBundle\Exception\DepencencyNotFoundException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
@@ -37,11 +38,16 @@ class EmrCMExtension extends Extension implements PrependExtensionInterface
         $container->setParameter('emr_cm.config', $config);
         $container->setParameter('emr_cm.config_type', $config['type']);
         $container->setParameter('emr_cm.easy_admin_settings', $config['easy_admin_settings']);
+        $container->setParameter('emr_cm.entity_path', $config['entity_path']);
+        $container->setParameter('emr_cm.entity_namespace', $config['entity_namespace']);
 
         $this->load(
             $config,
             $container
         );
+
+        if (!isset($container->getParameter('kernel.bundles')['EasyAdminBundle']))
+            throw new DepencencyNotFoundException("Dependency \"easycorp/easyadmin-bundle\" is not installed. Please include this package to your project.");
 
         if ($config['make_easy_admin_config'])
             $container->prependExtensionConfig('easy_admin', $this->makeEasyAdminConfig($config['easy_admin_settings'], $container));

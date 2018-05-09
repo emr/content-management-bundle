@@ -3,6 +3,8 @@
 namespace Emr\CMBundle\EasyAdmin;
 
 use Emr\CMBundle\Configuration\EntityConfig;
+use Emr\CMBundle\Exception\SameEntityNameException;
+use Illuminate\Support\Arr;
 
 /**
  * @todo 1 kere kullanım varsa cache'ler kaldırılacak.
@@ -36,14 +38,72 @@ class EasyAdminConfiguration
         $this->entityConfig = $entityConfig;
     }
 
+    private function setAndGetEntityName(string $class): string
+    {
+        return $this->naming->set(
+            $this->settings['entities'][$class] ?? $class,
+            null,
+            true
+        );
+    }
+
     public function getAutoConfigEntities(): array
     {
         if (!$this->settings['auto_config_sections']) return [];
         if (isset($this->config['auto_config_entities'])) return $this->config['auto_config_entities'];
 
         return $this->config['auto_config_entities'] = array_merge(
-            $this->getSectionEntities()
+            $this->getSectionEntities(),
+            $this->getAdminEntities()
         );
+    }
+
+    public function getAdminEntities(): array
+    {
+        if (isset($this->config['admin_entities'])) return $this->config['admin_entities'];
+        $this->config['admin_entities'] = [];
+
+        foreach ($this->entityConfig->getAdmins() as $adminClass => $settings)
+        {
+            try {
+                $name = $this->setAndGetEntityName($adminClass);
+            } catch (SameEntityNameException $e) {
+                continue;
+            }
+
+            $this->config['admin_entities'][$name] = [
+                'show' => [
+                    'fields' => $this->entityConfig->getFields($adminClass, function($field) {
+                        return in_array('show', $field['actions']) && !in_array('show', $field['disabled_actions']);
+                    })
+                ],
+                'form' => [
+                    'fields' => $this->entityConfig->getFields($adminClass, function($field) {
+                        return in_array('form', $field['actions']) && !in_array('form', $field['disabled_actions']);
+                    })
+                ],
+                'list' => [
+                    'fields' => $this->entityConfig->getFields($adminClass, function($field) {
+                        return in_array('list', $field['actions']) && !in_array('list', $field['disabled_actions']);
+                    })
+                ],
+                'new' => [
+                    'fields' => $this->entityConfig->getFields($adminClass, function($field) {
+                        return in_array('new', $field['actions']) && !in_array('new', $field['disabled_actions']);
+                    })
+                ],
+                'edit' => [
+                    'fields' => $this->entityConfig->getFields($adminClass, function($field) {
+                        return in_array('edit', $field['actions']) && !in_array('edit', $field['disabled_actions']);
+                    })
+                ]
+            ];
+
+            foreach ($settings as $key => $value)
+                Arr::set($this->config['admin_entities'][$name], $key, $value);
+        }
+
+        return $this->config['admin_entities'];
     }
 
     public function getSectionEntities(): array
@@ -53,11 +113,7 @@ class EasyAdminConfiguration
 
         foreach ($this->entityConfig->getSections() as $section)
         {
-            $name = $this->naming->set(
-                $settings['entities'][$section['class']] ?? $section['class'],
-                null,
-                false
-            );
+            $name = $this->setAndGetEntityName($section['class']);
 
             $this->config['section_entities'][$name] = [
                 'action_roles' => [
@@ -96,17 +152,20 @@ class EasyAdminConfiguration
                 ],
                 'new' => [
                     'fields' => $this->entityConfig->getFields($section['class'], function($field) {
-                        return in_array('new', $field['actions']);
+                        return (in_array('new', $field['actions']) && !in_array('new', $field['disabled_actions'])) || in_array('form', $field['actions']);
                     })
                 ],
                 'edit' => [
                     'fields' => array_merge(
                         $this->entityConfig->getFields($section['class'], function($field) {
-                            return in_array('edit', $field['actions']);
+                            return (in_array('edit', $field['actions']) && !in_array('edit', $field['disabled_actions'])) || in_array('form', $field['actions']);
                         })
                     )
                 ]
             ];
+
+            foreach ($this->entityConfig->getAdmin($section['class']) as $key => $value)
+                Arr::set($this->config['section_entities'][$name], $key, $value);
         }
 
         return $this->config['section_entities'];
@@ -125,7 +184,7 @@ class EasyAdminConfiguration
                 'form' => [
                     'title' => 'Settings',
                     'fields' => $this->entityConfig->getFields(EntityConfig::CONSTANT, function($field) {
-                        return in_array('edit', $field['actions']);
+                        return in_array('edit', $field['actions']) && !in_array('edit', $field['disabled_actions']);
                     })
                 ]
             ],
@@ -165,7 +224,7 @@ class EasyAdminConfiguration
 //                            ],
 //                        ],
                         $this->entityConfig->getFields(EntityConfig::LOCALIZED_CONSTANT, function($field) {
-                            return in_array('edit', $field['actions']) && $field['property'] != 'locale';
+                            return in_array('edit', $field['actions']) && !in_array('edit', $field['disabled_actions']) && $field['property'] != 'locale';
                         }),
                         [
                             [
@@ -220,7 +279,9 @@ class EasyAdminConfiguration
                             'type_options'  => [
                                 'required' => true
                             ]
-                        ]
+                        ],
+                        'menuView',
+                        'menuPosition',
                     ]
                 ],
                 'new' => [
@@ -347,6 +408,11 @@ class EasyAdminConfiguration
     public function getDesign(): array
     {
         return $this->config['design'] ?? $this->config['design'] = [
+            'assets' => [
+                'css' => [
+                    'bundles/emrcm/easyadmin-improvements.css'
+                ]
+            ],
             'templates' => [
                 'menu' => '@EmrCM/admin/menu.html.twig',
             ],

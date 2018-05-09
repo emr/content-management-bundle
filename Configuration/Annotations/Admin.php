@@ -10,5 +10,6 @@ use Doctrine\Common\Annotations\Annotation;
  */
 class Admin
 {
-    public $label;
+    /** @var array */
+    public $settings = [];
 }

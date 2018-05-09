@@ -2,6 +2,9 @@
 
 namespace Emr\CMBundle\Configuration;
 
+/**
+ * @todo buradaki ve altlarındaki algoritmalar basitleştirilecek.
+ */
 abstract class EntityConfig
 {
     public const PAGE               = 'page';
@@ -11,13 +14,38 @@ abstract class EntityConfig
 
     /**
      * Get class for a key
+     *
      * @param string $for
      * @return string
      */
     abstract public function getClass(string $for): string;
 
     /**
+     * Get classes defined as admin
+     *
+     * @return array
+     * [
+     *     Class => settings
+     * ]
+     */
+    abstract public function getAdmins(): array;
+
+    /**
+     * Get an admin entity settings
+     *
+     * @param string $class
+     * @return array
+     * [
+     *     class => EntityClass
+     *     setting => value
+     *     ...
+     * ]
+     */
+    abstract public function getAdmin(string $class): array;
+
+    /**
      * Get fields for a class
+     *
      * @param string $for       Class or one of self constants
      * @param callable $filter  Filter to be parameter of array_filter
      * @return array
@@ -27,28 +55,22 @@ abstract class EntityConfig
     /**
      * Get CMS sections
      *
-     * [
-     *      property => [
-     *          class,              | entitiy class
-     *          property,           | property in page class
-     *          label,              | nullable
-     *          admin,              | nullable |  entity name
-     *      ]
-     * ]
      * @return array
+     * [
+     *     property => [
+     *         class,          | entitiy class
+     *         property,       | property in page class
+     *         label,          | nullable
+     *         admin,          | nullable |  entity name
+     *     ]
+     * ]
      */
     abstract public function getSections(): array;
 
     /**
-     * Get classes defined as admin
-     * @return array
-     */
-    abstract public function getAdminClasses(): array;
-
-    /**
      * Get classes defined as section
      * [
-     *      property => Class
+     *     property => Class
      * ]
      * @return array
      */
@@ -64,7 +86,7 @@ abstract class EntityConfig
 
     /**
      * [
-     *      Class => property
+     *     Class => property
      * ]
      * @return array
      */

@@ -19,4 +19,6 @@ class Section
      * @var string
      */
     public $admin;
+    /** @var integer */
+    public $position = 100;
 }

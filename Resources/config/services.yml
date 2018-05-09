@@ -1,7 +1,9 @@
+# todo: sabit değişkenleri ve sayfa nesnesini alabilmek için cms servisi yapılacak
+
 parameters:
     # default parameters
-    emr_cm.entity_path: 'AppBundle/Entity'
-    emr_cm.entity_namespace: 'AppBundle\Entity'
+#    emr_cm.entity_path: 'AppBundle/Entity'
+#    emr_cm.entity_namespace: 'AppBundle\Entity'
     # will be filled by extension
 #    emr_cm.easy_admin_settings: ~
 
@@ -10,10 +12,12 @@ services:
         class: Emr\CMBundle\Configuration\AnnotationEntityConfig
         arguments:
 #            - '@annotation_reader'
-            - '%kernel.root_dir%/../src/%emr_cm.entity_path%'
+            - '%emr_cm.entity_path%'
             - '%emr_cm.entity_namespace%'
 
-    emr_cm.entity_config: '@emr_cm.entity_config.annotation'
+    emr_cm.entity_config:
+        public: true
+        alias: 'emr_cm.entity_config.annotation'
 
     emr_cm.easy_admin_entity_naming:
         public: false
@@ -29,6 +33,7 @@ services:
     Emr\CMBundle\EventListener\EasyAdminSubscriber:
         public: false
         arguments:
+            - '@property_accessor'
             - '@emr_cm.entity_config'
             - '@emr_cm.easy_admin_entity_naming'
             - '%emr_cm.easy_admin_settings%'

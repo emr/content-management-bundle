@@ -13,6 +13,7 @@ class SectionLoader extends AbstractLoader
         $builder = new ClassMetadataBuilder($metadata);
 
         $builder->createOneToMany('pages', $this->config->getClass(EntityConfig::PAGE))
+            ->cascadePersist()
             ->mappedBy($this->config->getSection($metadata->getName())['property'])
         ->build();
     }

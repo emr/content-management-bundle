@@ -2,22 +2,10 @@
 
 namespace Emr\CMBundle\Middleware;
 
-use Doctrine\ORM\EntityManager;
 use Emr\CMBundle\Configuration\EntityConfig;
-use Symfony\Component\HttpFoundation\Request;
 
 abstract class BaseMiddleware
 {
-    /**
-     * @var EntityManager
-     */
-    protected $em;
-
-    /**
-     * @var Request
-     */
-    protected $request;
-
     /**
      * @var EntityConfig
      */
@@ -42,14 +30,10 @@ abstract class BaseMiddleware
     public function __construct(
         array $settings,
         EntityConfig $cmsEntityConfig,
-        Request $request,
-        EntityManager $em,
         $entity
     ) {
         $this->settings = $settings;
         $this->cmsEntityConfig = $cmsEntityConfig;
-        $this->request = $request;
-        $this->em = $em;
         if (is_array($entity))
             $this->easyAdminEntityConfig = $entity;
         else

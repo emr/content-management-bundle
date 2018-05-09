@@ -2,11 +2,22 @@
 
 namespace Emr\CMBundle\Middleware;
 
-use Emr\CMBundle\EasyAdmin\EasyAdminEntityNaming;
+use Doctrine\ORM\EntityManager;
 
 class LocalizedConstantMiddleware extends BaseMiddleware
 {
     use Traits\GeneralConstant;
+
+    /**
+     * @var EntityManager
+     */
+    protected $em;
+
+    public function __construct(EntityManager $em, array $baseArgs)
+    {
+        $this->em = $em;
+        parent::__construct(...$baseArgs);
+    }
 
     private function newLocalizedConstantAction()
     {

@@ -33,13 +33,13 @@
                             {% set entityName = easyadmin_entity_name(section.class) %}
                             {% set entityConfig = easyadmin_entity(entityName) %}
                             {% if entityConfig.redirect is defined and entityConfig.redirect is not empty %}
-                                {% set _request_parameters = _request_parameters|merge(entityConfig.redirect) %}
+                                {% set _request_parameters = _request_parameters|merge(entityConfig.redirect is iterable ? entityConfig.redirect|merge({'entity':easyadmin_entity_name(entityConfig.redirect.entity)}) : {'entity': easyadmin_entity_name(entityConfig.redirect)}) %}
                             {% else %}
                                 {% set _request_parameters = _request_parameters|merge({ entity: entityName, action: 'edit', id: attribute(sectionObj, 'id') }) %}
                             {% endif %}
                             <tr>
                                 <td>
-                                    {{ section.title|default(section.property|humanize)|trans }}
+                                    {{ sectionObj.identifier|default(section.label|default(section.property|humanize)|trans) }}
                                 </td>
                                 <td class="actions">
                                     <a class="text-primary action-edit" href="{{ path('easyadmin', _request_parameters|merge({referer: path('easyadmin', _referer)|url_encode})) }}">{{ 'Edit'|trans }}</a>

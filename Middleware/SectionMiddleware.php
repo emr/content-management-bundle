@@ -3,6 +3,7 @@
 namespace Emr\CMBundle\Middleware;
 
 use Emr\CMBundle\Entity\Section;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
 
 class SectionMiddleware extends BaseMiddleware
 {
@@ -11,14 +12,25 @@ class SectionMiddleware extends BaseMiddleware
      */
     protected $entity;
 
+    /**
+     * @var PropertyAccessor
+     */
+    protected $accessor;
+
+    public function __construct(PropertyAccessor $accessor, array $baseArgs)
+    {
+        $this->accessor = $accessor;
+        parent::__construct(...$baseArgs);
+    }
+
     public function preUpdate()
     {
         $prop = $this->cmsEntityConfig->getSectionProperties()[get_class($this->entity)];
 
         foreach ($this->entity->getRemovedPages() as $removedPage)
-            $removedPage->{$prop} = null;
+            $this->accessor->setValue($removedPage, $prop, null);
 
         foreach ($this->entity->getNewPages() as $newPage)
-            $newPage->{$prop} = $this->entity;
+            $this->accessor->setValue($newPage, $prop, $this->entity);
     }
 }

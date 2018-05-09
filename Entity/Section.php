@@ -51,7 +51,6 @@ abstract class Section
 
     public function addPage(Page $page): self
     {
-//        $page->{EntityConfig::getConfig('section', static::class, 'name')} = $this;
         $this->pages->add($page);
         $this->newPages[] = $page;
 
@@ -81,16 +80,17 @@ abstract class Section
 
     public function __toString()
     {
-        $str = "(#{$this->id}) ";
-
         if ($this->identifier)
-            $str .= $this->identifier;
+            $str = $this->identifier;
         else
+        {
+            $str = "(#{$this->id}) ";
             if (count($this->pages) > 0)
                 foreach ($this->pages as $page)
                     $str .= $page->getKey().'/'.$page->getConstant().',';
             else
                 $str .= '--';
+        }
 
         return rtrim($str, ',');
     }
