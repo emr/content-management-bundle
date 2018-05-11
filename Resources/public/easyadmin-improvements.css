@@ -1,3 +1,6 @@
 body.edit textarea {
     min-height: inherit;
 }
+body.new textarea {
+    min-height: inherit;
+}

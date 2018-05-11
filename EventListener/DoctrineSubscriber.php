@@ -60,26 +60,26 @@ class DoctrineSubscriber implements EventSubscriber
 
     public function preUpdate(...$args)
     {
-        dump($args);
+//        dump($args);
     }
 
     public function postUpdate(...$args)
     {
-        dump($args);
+//        dump($args);
     }
 
     public function prePersist(...$args)
     {
-        dump($args);
+//        dump($args);
     }
 
     public function postPersist(...$args)
     {
-        dump($args);
+//        dump($args);
     }
 
     public function preFlush(...$args)
     {
-        dump($args);
+//        dump($args);
     }
 }

@@ -31,7 +31,7 @@ class AdminController extends BaseAdminController
         try {
             return parent::indexAction($request);
         } catch (ForbiddenActionException $e) {
-            return $this->redirectToRoute('fos_user_security_login');
+            return $this->redirectToBackendHomepage();
         }
     }
 

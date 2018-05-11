@@ -339,7 +339,7 @@ class EasyAdminConfiguration
                 [
                     'label' => 'Dashboard',
                     'icon' => 'dashboard',
-                    'entity' => $this->naming->get(EasyAdminEntityNaming::PAGE_ADMIN), // herhangi bir entity
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::CONSTANT), // herhangi bir entity
                     'params' => [
                         'action' => 'dashboard',
                     ],
@@ -394,7 +394,8 @@ class EasyAdminConfiguration
                 ],
                 [
                     'label' => 'Sections',
-                    'children' => array_keys($this->getSectionEntities())
+                    'children' => array_keys($this->getSectionEntities()),
+                    'role_require' => 'ROLE_SUPER_ADMIN',
                 ],
             ]
 //            [
