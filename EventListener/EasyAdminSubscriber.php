@@ -48,12 +48,23 @@ class EasyAdminSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
+            EasyAdminEvents::POST_INITIALIZE   => ['postInitialize'],
             EasyAdminEvents::PRE_LIST   => ['preList'],
             EasyAdminEvents::PRE_EDIT   => ['preEdit'],
             EasyAdminEvents::PRE_NEW    => ['preNew'],
             EasyAdminEvents::POST_NEW   => ['postNew'],
             EasyAdminEvents::PRE_UPDATE => ['preUpdate'],
         ];
+    }
+
+    public function postInitialize(GenericEvent $event)
+    {
+        $entity = $event->getSubject();
+
+        if ($entity['name'] == $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT))
+        {
+            $this->createLocalizedConstantMiddleware($event)->postInitialize();
+        }
     }
 
     public function preList(GenericEvent $event)
@@ -125,6 +136,7 @@ class EasyAdminSubscriber implements EventSubscriberInterface
     {
         return new Middleware\LocalizedConstantMiddleware(
             $event->getArgument('em'),
+            $event->getArgument('request'),
             [
                 $this->settings,
                 $this->cmsEntityConfig,

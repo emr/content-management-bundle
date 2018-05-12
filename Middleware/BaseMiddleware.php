@@ -40,6 +40,14 @@ abstract class BaseMiddleware
             $this->entity = $entity;
     }
 
+    public function preInitialize()
+    {
+    }
+
+    public function postInitialize()
+    {
+    }
+
     public function preList()
     {
     }
