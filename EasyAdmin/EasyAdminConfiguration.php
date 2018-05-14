@@ -355,17 +355,8 @@ class EasyAdminConfiguration
                 ],
                 [
                     'label' => 'Localized settings',
-                    'icon' => 'cog',
+                    'icon' => 'globe',
                     'entity' => $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT),
-                ],
-                [
-                    'label' => 'Add localized constant',
-                    'icon' => 'cog',
-                    'entity' => $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT),
-                    'role_require' => 'ROLE_SUPER_ADMIN',
-                    'params' => [
-                        'action' => 'new'
-                    ]
                 ],
                 [
                     'label' => 'Pages',
@@ -383,6 +374,15 @@ class EasyAdminConfiguration
                     'label' => 'Advanced',
                     'icon' => 'eye-close',
                     'role_require' => 'ROLE_ADMIN',
+                ],
+                [
+                    'label' => 'Add localized constant',
+                    'icon' => 'globe',
+                    'entity' => $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT),
+                    'role_require' => 'ROLE_SUPER_ADMIN',
+                    'params' => [
+                        'action' => 'new'
+                    ]
                 ],
                 [
                     'label' => 'Pages',
