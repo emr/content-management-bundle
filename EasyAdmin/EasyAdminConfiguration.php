@@ -209,6 +209,7 @@ class EasyAdminConfiguration
                         ],
                         [
                             'property' => 'constant',
+                            'label' => 'Settings',
                             'type_options' => ['required' => true],
                             'role_require' => 'ROLE_SUPER_ADMIN',
                         ]
@@ -256,6 +257,7 @@ class EasyAdminConfiguration
                     'fields' => [
                         [
                             'property'  => 'key',
+                            'label'     => 'Page key',
                             'type'      => 'text',
                         ],
                         'locale',
@@ -265,6 +267,7 @@ class EasyAdminConfiguration
                     'fields' => [
                         [
                             'property' => 'key',
+                            'label'    => 'Page key',
                         ],
                         [
                             'property'      => 'constant',
@@ -376,7 +379,7 @@ class EasyAdminConfiguration
                     'role_require' => 'ROLE_ADMIN',
                 ],
                 [
-                    'label' => 'Add localized constant',
+                    'label' => 'Add new locale',
                     'icon' => 'globe',
                     'entity' => $this->naming->get(EasyAdminEntityNaming::LOCALIZED_CONSTANT),
                     'role_require' => 'ROLE_SUPER_ADMIN',
